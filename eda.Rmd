@@ -1,0 +1,86 @@
+---
+title: "ReviewData"
+author: "Kate Davis"
+date: "08/05/2014"
+output: html_document
+---
+
+```{r get-data}
+options(stringsAsFactors=F)
+#require(plyr)
+df=read.csv("20140805_Raw_Data.csv",stringsAsFactors=F)
+df=(df[order(df$Profit.in.Millions),])
+df$Opening.Date=as.Date(df$Opening.Date,"%d-%b-%y")
+df$Withdrawl.Date=as.Date(df$Withdrawl.Date,"%d-%b-%y")
+df$Financial.Year=factor(df$Financial.Year,levels=sort(unique(df$Financial.Year)))
+#qq=quantile(log(abs(df$Profit.in.Millions)),seq(0,1,0.2),names=T,type=7)
+#df$decile=with(df,cut(log(abs(Profit.in.Millions)), breaks = qq,labels=names(qq)[1:(length(qq)-1)] ,include.lowest = T))
+#epm=tapply(df$Profit.in.Millions,df$Financial.Year,ecdf)
+qf<-function(vec){quantile(((vec)),seq(0,1,0.2),names=T,type=7)}
+dec=tapply(df$Profit.in.Millions,df$Financial.Year,qf)
+df$ndecile=NA
+for (l in 1:length(dec)){
+  qq=dec[[l]]
+  labs=names(dec[[l]])[1:(length(qq)-1)]
+  yr=names(dec)[l]
+  
+  tdf=cut(((df$Profit.in.Millions)), breaks = qq,labels=labs ,include.lowest = T)
+  df$ndecile[df$Financial.Year==yr]=tdf[df$Financial.Year==yr]
+}
+df$ndecile=as.numeric(df$ndecile)
+df$decile=as.character(as.numeric(df$ndecile)*20)
+#df$ndecile=as.numeric(sub("%","",df$decile))/100
+# no df$decile[negs]=paste0("-",df$decile[negs])
+# No df$ndecile[negs]=(-1*df$ndecile[negs])
+#qq=quantile(log(-1*df$Profit.in.Millions[negs]),seq(0,1,0.1),names=T,type=7)
+#df$decile[negs]=with(df,cut(log(-1*Profit.in.Millions[negs]), breaks = qq,labels=paste0("-",names(qq)[2:11]), include.lowest = T))
+str(df)
+```
+
+Let's see what we have, scatterplots first
+
+```{r scatters}
+require(ggplot2)
+require(scales)
+gscat=ggplot(df,aes(x=Days,y=Profit.in.Millions,color=Financial.Year))+geom_point()
+print(gscat)
+gscat=ggplot(df,aes(x=Gross.Earnings,y=Profit.in.Millions,color=Days))+geom_point()
+print(gscat)
+```
+
+
+```{r histogram}
+ghist=ggplot(df,aes(x=Profit.in.Millions)) + geom_histogram(binwidth=5)+facet_grid(Financial.Year~.)
+print(ghist)
+```
+
+```{r spiffy}
+df2=(df[order(df$Financial.Year,df$Profit.in.Millions),])
+negs=(df2$Profit.in.Millions<=0)
+require(scales)
+reds=sprintf("%02x",ceil(rescale(df2$ndecile[negs],to=c(0,255))))
+grey=sprintf("%02x",floor(rev(rescale(log(df2$ndecile[!negs]),to=c(0,255)))))
+df2$hr=""
+df2$hg=""
+df2$hb=""
+df2$hr[negs]="FF"
+df2$hg[negs]=reds
+df2$hb[negs]=reds
+df2$hr[!negs]=grey
+df2$hg[!negs]="FF"
+df2$hb[!negs]=grey
+df2$colorramp=with(df2,toupper(paste0("#",hr,hg,hb)))
+df2$y=0
+df2$y[negs]=df2$Profit
+df2$yend=df2$Profit
+df2$yend[negs]=0
+df2$xend=df2$Profit.in.Millions
+df2$x=min(df2$Profit.in.Millions)-0.5
+df2$x[2:nrow(df2)]=df2$xend[1:(nrow(df2)-1)]+0.5
+str(dt2)
+
+gspiffy=ggplot(df2,aes(x=ndecile,y=Profit.in.Millions))+geom_bar(stat="identity")+facet_grid(Financial.Year~.)
+#gspiffy=ggplot(df2,aes(x=Profit.in.Millions,y=Profit))+geom_rect(xmin=df2$x,xmax=df2$xend,ymin=df2$y,ymax=df2$yend,fill=df2$colorramp)+facet_grid(Financial.Year~.)
+print(gspiffy)
+```
+
