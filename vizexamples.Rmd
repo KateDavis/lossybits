@@ -33,8 +33,10 @@ print(ghist)
 ```
 
 ```{r stacked-bar}
-
-gbar=ggplot(df,aes(x=Cust.Start,y=Profit,fill=Earnings.Type))+geom_bar()
+df=df[order(df$Cut.Start,df$Earnings.Type),]
+gbar=ggplot(df[df$Profit>0,],aes(x=factor(Cut.Start),y=Profit,fill=Earnings.Type))+geom_bar(stat="identity",)+facet_grid(Financial.Year~.)+coord_flip()
+print(gbar)
+gbar=ggplot(df[df$Profit<=0,],aes(x=factor(Cut.Start),y=Profit*-1,fill=Earnings.Type))+geom_bar(stat="identity",)+facet_grid(Financial.Year~.)+coord_flip()
 print(gbar)
 ```
 
@@ -43,5 +45,48 @@ print(gbar)
 df$base=0
 gspiffy=ggplot(df,aes(x=Profit,y=Gross.Earnings))+geom_rect(xmin=df$Cut.Start,xmax=df$Cut.End,ymin=df$base,ymax=df$Profit)
 print(gspiffy)
+```
+
+```{r backtoback}
+df=df[order(df$Financial.Year,df$Earnings.Type,df$Profit),]
+gbb=ggplot(df,aes(x=Financial.Year))+
+  geom_bar(data = subset(df, Profit>0),aes(y=Profit,fill=Earnings.Type),stat="identity")+
+  geom_bar(data = subset(df, Profit<=0),aes(y=Profit,fill=Earnings.Type),stat="identity")
+#scale_fill_gradient2(low = muted("red"),mid = "white", high = muted("black"), midpoint = 0,space = "rgb")
+#facet_grid(Financial.Year~.)+coord_flip()
+print(gbb)
+
+```
+
+
+
+```{r backtoback2}
+df=df[order(df$Financial.Year,df$Profit),]
+df$pl="P"
+df$pl[df$Profit<=0]="L"
+gbb=ggplot(df,aes(x=Financial.Year))+
+  geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
+  geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
+   scale_y_continuous(labels = comma) +  theme_bw()+
+  ylab("Profit - Loss") + 
+  geom_hline(yintercept = 0,colour = "black") +
+scale_fill_gradient2(low = muted("red"),mid = "white", high = muted("black"), midpoint = 0,space = "rgb")
+print(gbb)
+
+```
+
+
+```{r backtoback3}
+df=df[order(df$Financial.Year,df$Profit),]
+df$pl="P"
+df$pl[df$Profit<=0]="L"
+gbb3=ggplot(df,aes(x=Financial.Year))+
+  geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
+  geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
+   scale_y_continuous(labels = comma, limits=c(-50,50)) +  theme_bw()+
+  ylab("Profit - Loss") + 
+  geom_hline(yintercept = 0,colour = "black") 
+print(gbb3)
+
 ```
 
