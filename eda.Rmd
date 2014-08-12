@@ -2,13 +2,17 @@
 title: "ReviewData"
 author: "Kate Davis"
 date: "08/05/2014"
-output: html_document
+output:
+  html_document:
+    keep_md: true
 ---
 
 ```{r get-data}
 options(stringsAsFactors=F)
 #require(plyr)
 df=read.csv("20140805_Raw_Data.csv",stringsAsFactors=F)
+df$Profit.in.Millions=df$Profit/1e6
+
 df=(df[order(df$Profit.in.Millions),])
 df$Opening.Date=as.Date(df$Opening.Date,"%d-%b-%y")
 df$Withdrawl.Date=as.Date(df$Withdrawl.Date,"%d-%b-%y")
@@ -58,7 +62,7 @@ print(ghist)
 df2=(df[order(df$Financial.Year,df$Profit.in.Millions),])
 negs=(df2$Profit.in.Millions<=0)
 require(scales)
-reds=sprintf("%02x",ceil(rescale(df2$ndecile[negs],to=c(0,255))))
+reds=sprintf("%02x",ceiling(rescale(df2$ndecile[negs],to=c(0,255))))
 grey=sprintf("%02x",floor(rev(rescale(log(df2$ndecile[!negs]),to=c(0,255)))))
 df2$hr=""
 df2$hg=""
@@ -77,7 +81,7 @@ df2$yend[negs]=0
 df2$xend=df2$Profit.in.Millions
 df2$x=min(df2$Profit.in.Millions)-0.5
 df2$x[2:nrow(df2)]=df2$xend[1:(nrow(df2)-1)]+0.5
-str(dt2)
+str(df2)
 
 gspiffy=ggplot(df2,aes(x=ndecile,y=Profit.in.Millions))+geom_bar(stat="identity")+facet_grid(Financial.Year~.)
 #gspiffy=ggplot(df2,aes(x=Profit.in.Millions,y=Profit))+geom_rect(xmin=df2$x,xmax=df2$xend,ymin=df2$y,ymax=df2$yend,fill=df2$colorramp)+facet_grid(Financial.Year~.)
