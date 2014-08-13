@@ -21,6 +21,8 @@ df=read.csv("20140805_Raw_Data.csv",stringsAsFactors=F) #legacy name
 df$Profit.in.Millions=df$Profit/1e6
 df$Opening.Date=as.Date(df$Opening.Date,"%d-%b-%y")
 df$Withdrawl.Date=as.Date(df$Withdrawl.Date,"%d-%b-%y")
+df$pl="P"
+df$pl[df$Profit<=0]="L"
 df$Financial.Year=factor(df$Financial.Year,levels=sort(unique(df$Financial.Year)))
 str(df)
 ```
@@ -71,8 +73,6 @@ print(gbb)
 
 ```{r backtoback2}
 df=df[order(df$Financial.Year,df$Profit),]
-df$pl="P"
-df$pl[df$Profit<=0]="L"
 gbb=ggplot(df,aes(x=Financial.Year))+
   geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
   geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
@@ -86,9 +86,7 @@ print(gbb)
 
 
 ```{r backtoback3}
-df=df[order(df$Financial.Year,df$Profit),]
-df$pl="P"
-df$pl[df$Profit<=0]="L"
+df=df[order(df$Financial.Year,df$Earnings.Type,df$pl),]
 gbb3=ggplot(df,aes(x=Financial.Year))+
   geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
   geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
@@ -98,29 +96,3 @@ gbb3=ggplot(df,aes(x=Financial.Year))+
 print(gbb3)
 
 ```
-
-```{r testplot, engine="python"}
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import numpy as np
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for c, z in zip(['r', 'g', 'b', 'y'], [30, 20, 10, 0]):
-    xs = np.arange(20)
-    ys = np.random.rand(20)
-
-    # You can provide either a single color or an array. To demonstrate this,
-    # the first bar of each set will be colored cyan.
-    cs = [c] * len(xs)
-    cs[0] = 'c'
-    ax.bar(xs, ys, zs=z, zdir='y', color=cs, alpha=0.8)
-
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-
-plt.print()
-
-```
-

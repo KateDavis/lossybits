@@ -20,12 +20,14 @@ df=read.csv("20140805_Raw_Data.csv",stringsAsFactors=F) #legacy name
 df$Profit.in.Millions=df$Profit/1e6
 df$Opening.Date=as.Date(df$Opening.Date,"%d-%b-%y")
 df$Withdrawl.Date=as.Date(df$Withdrawl.Date,"%d-%b-%y")
+df$pl="P"
+df$pl[df$Profit<=0]="L"
 df$Financial.Year=factor(df$Financial.Year,levels=sort(unique(df$Financial.Year)))
 str(df)
 ```
 
 ```
-## 'data.frame':	151 obs. of  11 variables:
+## 'data.frame':	151 obs. of  12 variables:
 ##  $ No                : int  116 4 48 36 82 53 64 117 118 1 ...
 ##  $ Opening.Date      : Date, format: "2000-01-16" "2001-08-20" ...
 ##  $ Withdrawl.Date    : Date, format: "2003-11-10" "2002-09-11" ...
@@ -37,6 +39,7 @@ str(df)
 ##  $ Cut.Start         : num  901000 36000 36000 122000 122000 200000 3370000 0 200000 550000 ...
 ##  $ Cut.End           : num  1000000 101000 101000 200000 200000 300000 4000000 30000 300000 800000 ...
 ##  $ Profit.in.Millions: num  0.9588 0.0503 0.0679 0.1234 0.1292 ...
+##  $ pl                : chr  "P" "P" "P" "P" ...
 ```
 Let's see what we have, scatterplots first
 
@@ -121,8 +124,6 @@ print(gbb)
 
 ```r
 df=df[order(df$Financial.Year,df$Profit),]
-df$pl="P"
-df$pl[df$Profit<=0]="L"
 gbb=ggplot(df,aes(x=Financial.Year))+
   geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
   geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Profit.in.Millions),stat="identity")+
@@ -142,9 +143,7 @@ print(gbb)
 
 
 ```r
-df=df[order(df$Financial.Year,df$Profit),]
-df$pl="P"
-df$pl[df$Profit<=0]="L"
+df=df[order(df$Financial.Year,df$Earnings.Type,df$pl),]
 gbb3=ggplot(df,aes(x=Financial.Year))+
   geom_bar(data = subset(df, pl=="P"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
   geom_bar(data = subset(df, pl=="L"),aes(y=Profit.in.Millions,fill=Earnings.Type),stat="identity")+
@@ -159,30 +158,3 @@ print(gbb3)
 ```
 
 ![plot of chunk backtoback3](./vizexamples_files/figure-html/backtoback3.png) 
-
-
-```python
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-import numpy as np
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-for c, z in zip(['r', 'g', 'b', 'y'], [30, 20, 10, 0]):
-    xs = np.arange(20)
-    ys = np.random.rand(20)
-
-    # You can provide either a single color or an array. To demonstrate this,
-    # the first bar of each set will be colored cyan.
-    cs = [c] * len(xs)
-    cs[0] = 'c'
-    ax.bar(xs, ys, zs=z, zdir='y', color=cs, alpha=0.8)
-
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-
-plt.print()
-
-```
-
